@@ -27,4 +27,4 @@ spec:
             initialDelaySeconds: 1
             exec:
               command:
-                - ls -la
+                - ls
