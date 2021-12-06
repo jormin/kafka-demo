@@ -19,3 +19,11 @@ spec:
       containers:
         - name: repository
           image: jormin/kafka-demo-repository:v0.0.1
+          # 就绪探针
+          readinessProbe:
+            # 执行周期，单位：秒
+            periodSeconds: 1
+            # 初始化延迟，单位：秒
+            initialDelaySeconds: 1
+            tcpSocket:
+              port: 22
