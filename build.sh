@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# gateway
+cd gateway
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o gateway main.go
+docker build -t jormin/kafka-demo-gateway:latest .
+docker push jormin/kafka-demo-gateway
+rm -rf ./gateway
+
+# order
+cd ../order
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o order main.go
+docker build -t jormin/kafka-demo-order:latest .
+docker push jormin/kafka-demo-order
+rm -rf ./order
+
+# repository
+cd ../repository
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o repository main.go
+docker build -t jormin/kafka-demo-repository:latest .
+docker push jormin/kafka-demo-repository
+rm -rf ./repository
+
+# statistics
+cd ../statistics
+CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o statistics main.go
+docker build -t jormin/kafka-demo-statistics:latest .
+docker push jormin/kafka-demo-statistics
+rm -rf ./statistics
