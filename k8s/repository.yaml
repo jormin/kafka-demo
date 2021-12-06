@@ -18,4 +18,4 @@ spec:
     spec:
       containers:
         - name: repository
-          image: jormin/kafka-demo-repository:latest
+          image: jormin/kafka-demo-repository:v0.0.1

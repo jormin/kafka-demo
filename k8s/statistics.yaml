@@ -24,4 +24,4 @@ spec:
     spec:
       containers:
         - name: statistics
-          image: jormin/kafka-demo-statistics:latest
+          image: jormin/kafka-demo-statistics:v0.0.1
