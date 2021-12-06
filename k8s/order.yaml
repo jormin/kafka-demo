@@ -6,13 +6,7 @@ metadata:
 spec:
   # 期望 pod 数量
   replicas: 3
-  strategy:
-    rollingUpdate:
-      # 滚动升级过程中最多允许超出期望副本数的数量，比如期望3，maxSurge 配置为1，则最多存在4个pod，也可以配置百分比
-      maxSurge: 1
-      # 滚动升级过程中最多允许存在不可用的 pod 数量，配置为0表示升级过程中所有的 pod 都必须可用，即 pod 挨个替换，也可以配置百分比
-      maxUnavailable: 0
-  # 匹配器，匹配 pod 的方式
+  serviceName: "order"
   selector:
     matchLabels:
       app: order
