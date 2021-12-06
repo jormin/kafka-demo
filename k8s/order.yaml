@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: order
-          image: jormin/order:latest
+          image: jormin/kafka-demo-order:latest
           # 就绪探针
           readinessProbe:
             # 执行周期，单位：秒

@@ -26,7 +26,7 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: jormin/gateway:latest
+          image: jormin/kafka-demo-gateway:latest
           # 就绪探针
           readinessProbe:
             # 执行周期，单位：秒
