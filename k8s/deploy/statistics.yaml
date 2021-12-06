@@ -31,5 +31,6 @@ spec:
             periodSeconds: 1
             # 初始化延迟，单位：秒
             initialDelaySeconds: 1
-            tcpSocket:
-              port: 22
+            exec:
+              command:
+                - ls -la
