@@ -6,8 +6,6 @@ metadata:
 spec:
   # 期望 pod 数量
   replicas: 3
-  # 新创建的 pod 在运行指定秒数后才视为运行可用，配合就绪探针可以在滚动升级失败的时候阻止升级，避免部署出错的应用
-  minReadySeconds: 2
   strategy:
     rollingUpdate:
       # 滚动升级过程中最多允许超出期望副本数的数量，比如期望3，maxSurge 配置为1，则最多存在4个pod，也可以配置百分比
