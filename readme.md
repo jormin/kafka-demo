@@ -62,15 +62,250 @@ cat >> /etc/hosts <<EOF
 EOF
 ```
 
-#### 3.2 部署Api网关层
+#### 3.2 创建 Topic
 
-#### 3.3 部署订单服务
+部署服务之前，需要先创建一个名为 **order** 的 Topic，这里我们通过 kafka client pod 来创建
 
-#### 3.4 部署仓储服务
+创建并连接 kafka client pod
 
-#### 3.5 部署统计服务
+```shell
+root@master:~/kafka-demo/k8s/deploy# kubectl run kafka-client --restart='Never' --image docker.io/bitnami/kafka:2.8.1-debian-10-r57 --namespace devops --command -- sleep infinity
+pod/kafka-client created
+
+root@master:~/kafka-demo/k8s/deploy# kubectl exec --tty -i kafka-client --namespace devops -- bash
+I have no name!@kafka-client:/$
+```
+
+连接上 kafka client pod 后，创建 Topic
+
+```shell
+I have no name!@kafka-client:/bin$ kafka-topics.sh --bootstrap-server kafka.devops.svc.cluster.local:9092 --list
+__consumer_offsets
+
+I have no name!@kafka-client:/bin$ kafka-topics.sh --bootstrap-server kafka.devops.svc.cluster.local:9092 --create --topic order --partitions 3 --replication-factor 2
+Created topic order.
+```
+
+#### 3.3 部署Api网关层
+
+Gateway 部署为 Deployment，启动10个Pod，需要配一个 Service 和 IngressRoute，使用域名 **kafka-demo.local.com** 访问，资源清单如下：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway
+  namespace: kafka-demo
+spec:
+  # 期望 pod 数量
+  replicas: 10
+  # 新创建的 pod 在运行指定秒数后才视为运行可用，配合就绪探针可以在滚动升级失败的时候阻止升级，避免部署出错的应用
+  minReadySeconds: 2
+  strategy:
+    rollingUpdate:
+      # 滚动升级过程中最多允许超出期望副本数的数量，比如期望3，maxSurge 配置为1，则最多存在4个pod，也可以配置百分比
+      maxSurge: 1
+      # 滚动升级过程中最多允许存在不可用的 pod 数量，配置为0表示升级过程中所有的 pod 都必须可用，即 pod 挨个替换，也可以配置百分比
+      maxUnavailable: 0
+  # 匹配器，匹配 pod 的方式
+  selector:
+    matchLabels:
+      app: gateway
+  template:
+    metadata:
+      name: gateway
+      labels:
+        app: gateway
+    spec:
+      imagePullSecrets:
+        - name: harbor-jormin
+      containers:
+        - name: gateway
+          image: harbor.wcxst.com/jormin/kafka-demo-gateway:latest
+          # 就绪探针
+          readinessProbe:
+            # 执行周期，单位：秒
+            periodSeconds: 1
+            # 初始化延迟，单位：秒
+            initialDelaySeconds: 1
+            httpGet:
+              path: /
+              port: 80
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: gateway
+  namespace: kafka-demo
+spec:
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    app: gateway
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: gateway
+  namespace: kafka-demo
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`kafka-demo.local.com`) && (PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: gateway
+          port: 80
+```
+
+#### 3.4 部署订单服务
+
+Order 部署为 StatefulSet，启动3个Pod，需要配一个 Service ，使用内部域名 **order.kafka-demo.svc.clauster.local** 访问，资源清单如下：
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: order
+  namespace: kafka-demo
+spec:
+  # 期望 pod 数量
+  replicas: 3
+  serviceName: "order"
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      name: order
+      labels:
+        app: order
+    spec:
+      imagePullSecrets:
+        - name: harbor-jormin
+      containers:
+        - name: order
+          image: harbor.wcxst.com/jormin/kafka-demo-order:latest
+          # 就绪探针
+          readinessProbe:
+            # 执行周期，单位：秒
+            periodSeconds: 1
+            # 初始化延迟，单位：秒
+            initialDelaySeconds: 1
+            httpGet:
+              path: /
+              port: 80
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: order
+  namespace: kafka-demo
+spec:
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    app: order
+```
+
+#### 3.5 部署仓储服务
+
+Repository 部署为 StatefulSet，启动3个Pod，资源清单如下：
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: repository
+  namespace: kafka-demo
+spec:
+  # 期望 pod 数量
+  replicas: 3
+  serviceName: "repository"
+  selector:
+    matchLabels:
+      app: repository
+  template:
+    metadata:
+      name: repository
+      labels:
+        app: repository
+    spec:
+      imagePullSecrets:
+        - name: harbor-jormin
+      containers:
+        - name: repository
+          image: harbor.wcxst.com/jormin/kafka-demo-repository:latest
+          # 就绪探针
+          readinessProbe:
+            # 执行周期，单位：秒
+            periodSeconds: 1
+            # 初始化延迟，单位：秒
+            initialDelaySeconds: 1
+            exec:
+              command:
+                - ls
+```
+
+#### 3.6 部署统计服务
+
+Statistics 服务部署为 Deployment，只需要启动1个Pod，资源清单如下：
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: statistics
+  namespace: kafka-demo
+spec:
+  # 期望 pod 数量
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      # 滚动升级过程中最多允许超出期望副本数的数量，比如期望3，maxSurge 配置为1，则最多存在4个pod，也可以配置百分比
+      maxSurge: 1
+      # 滚动升级过程中最多允许存在不可用的 pod 数量，配置为0表示升级过程中所有的 pod 都必须可用，即 pod 挨个替换，也可以配置百分比
+      maxUnavailable: 0
+  # 匹配器，匹配 pod 的方式
+  selector:
+    matchLabels:
+      app: statistics
+  template:
+    metadata:
+      name: statistics
+      labels:
+        app: statistics
+    spec:
+      imagePullSecrets:
+        - name: harbor-jormin
+      containers:
+        - name: statistics
+          image: harbor.wcxst.com/jormin/kafka-demo-statistics:latest
+          # 就绪探针
+          readinessProbe:
+            # 执行周期，单位：秒
+            periodSeconds: 1
+            # 初始化延迟，单位：秒
+            initialDelaySeconds: 1
+            exec:
+              command:
+                - ls
+```
 
 ### 4. 测试
+
+部署完成后使用 apache ab 进行测试，如果没有安装的话，使用 **apt install apache2-utils** 安装。
 
 ### 5. 总结
 

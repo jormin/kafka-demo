@@ -38,3 +38,35 @@ spec:
             httpGet:
               path: /
               port: 80
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: gateway
+  namespace: kafka-demo
+spec:
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    app: gateway
+
+---
+
+apiVersion: traefik.containo.us/v1alpha1
+kind: IngressRoute
+metadata:
+  name: gateway
+  namespace: kafka-demo
+spec:
+  entryPoints:
+    - web
+  routes:
+    - match: Host(`kafka-demo.local.com`) && (PathPrefix(`/`)
+      kind: Rule
+      services:
+        - name: gateway
+          port: 80

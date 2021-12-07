@@ -30,3 +30,18 @@ spec:
             httpGet:
               path: /
               port: 80
+
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name: order
+  namespace: kafka-demo
+spec:
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+    app: order
