@@ -67,7 +67,7 @@ spec:
   entryPoints:
     - web
   routes:
-    - match: Host(`kafka-demo.local.com`) && (PathPrefix(`/`)
+    - match: Host(`kafka-demo.local.com`) && PathPrefix(`/`)
       kind: Rule
       services:
         - name: gateway
