@@ -15,7 +15,7 @@ Kafka Demo
 | ---- | ---- | -------- | ------------ | -------------- |
 | 陕北 | 0    | Pod-0    | repository-0 | statistics-xxx |
 | 关中 | 1    | Pod-1    | repository-1 | statistics-xxx |
-| 陕南 | 2    | Pod-2    | repository-0 | statistics-xxx |
+| 陕南 | 2    | Pod-2    | repository-2 | statistics-xxx |
 
 #### 1.2 项目流程
 
