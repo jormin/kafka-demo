@@ -22,9 +22,11 @@ spec:
       labels:
         app: statistics
     spec:
+      imagePullSecrets:
+        - harbor-jormin
       containers:
         - name: statistics
-          image: jormin/kafka-demo-statistics:v0.0.1
+          image: harbor.wcxst.com/jormin/kafka-demo-statistics:latest
           # 就绪探针
           readinessProbe:
             # 执行周期，单位：秒

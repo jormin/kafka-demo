@@ -16,9 +16,11 @@ spec:
       labels:
         app: repository
     spec:
+      imagePullSecrets:
+        - harbor-jormin
       containers:
         - name: repository
-          image: jormin/kafka-demo-repository:v0.0.1
+          image: harbor.wcxst.com/jormin/kafka-demo-repository:latest
           # 就绪探针
           readinessProbe:
             # 执行周期，单位：秒

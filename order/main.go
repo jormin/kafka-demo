@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -31,15 +32,15 @@ func main() {
 // SubmitOrder 提交订单
 func SubmitOrder(w http.ResponseWriter, r *http.Request) {
 	// 生成订单信息
-	_ = r.ParseForm()
-	r.Form.Get("time")
-	m := map[string]interface{}{
-		"time":     r.Form.Get("time"),
-		"user_id":  r.Form.Get("user_id"),
-		"order_id": id.NewID(),
-		"money":    r.Form.Get("money"),
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		fmt.Printf("read body err, %v\n", err)
+		return
 	}
-	b, _ := json.Marshal(m)
+	params := make(map[string]interface{})
+	_ = json.Unmarshal(body, &params)
+	params["order_id"] = id.NewID()
+	b, _ := json.Marshal(params)
 	content := fmt.Sprintf("%s", b)
 
 	//  记录日志

@@ -24,9 +24,11 @@ spec:
       labels:
         app: gateway
     spec:
+      imagePullSecrets:
+        - harbor-jormin
       containers:
         - name: gateway
-          image: jormin/kafka-demo-gateway:v0.0.1
+          image: harbor.wcxst.com/jormin/kafka-demo-gateway:latest
           # 就绪探针
           readinessProbe:
             # 执行周期，单位：秒

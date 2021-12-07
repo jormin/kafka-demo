@@ -32,6 +32,7 @@ func main() {
 		b, _ := json.Marshal(m)
 		logger.Info().Msg(fmt.Sprintf("%s", b))
 	}
+	select {}
 }
 
 // GetLogger 获取Logger
