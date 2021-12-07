@@ -3,6 +3,8 @@ kind: StatefulSet
 metadata:
   name: order
   namespace: kafka-demo
+  labels:
+    app: order
 spec:
   # 期望 pod 数量
   replicas: 3

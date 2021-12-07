@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: gateway
   namespace: kafka-demo
+  labels:
+    app: gateway
 spec:
   # 期望 pod 数量
   replicas: 10

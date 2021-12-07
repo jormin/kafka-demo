@@ -3,6 +3,8 @@ kind: Deployment
 metadata:
   name: statistics
   namespace: kafka-demo
+  labels:
+    app: statistics
 spec:
   # 期望 pod 数量
   replicas: 1
