@@ -31,8 +31,9 @@ func SubmitOrder(w http.ResponseWriter, r *http.Request) {
 		"user_id": id.NewID(),
 		"money":   rand.Intn(1000),
 	}
+	url := fmt.Sprintf("http://order-%d.order.kafka-demo.svc.cluster.local/submit-order", rand.Intn(3))
 	body, _ := json.Marshal(m)
-	resp, err := http.Post("http://order.kafka-demo.svc.cluster.local/submit-order", "application/json", bytes.NewReader(body))
+	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

@@ -406,26 +406,15 @@ gateway   5m15s
 
 ### 4. 测试
 
-部署完成后使用 apache ab 进行测试，如果没有安装的话，使用 **apt install apache2-utils** 安装。
+部署完成后使用 apache ab 进行测试，如果没有安装的话，使用 **apt install apache2-utils** 安装，因为测试完后需要结合 Pod 的日志进行验证，所以这里我们只进行了少量的测试，总请求为10，并发量为1。
 
 ```shell
-root@nfs:~# ab -n 1000 -c 10 http://kafka-demo.local.com/submit-order
+root@nfs:~# ab -n 10 -c 1 http://kafka-demo.local.com/submit-order
 This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
 Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
 Licensed to The Apache Software Foundation, http://www.apache.org/
 
-Benchmarking kafka-demo.local.com (be patient)
-Completed 100 requests
-Completed 200 requests
-Completed 300 requests
-Completed 400 requests
-Completed 500 requests
-Completed 600 requests
-Completed 700 requests
-Completed 800 requests
-Completed 900 requests
-Completed 1000 requests
-Finished 1000 requests
+Benchmarking kafka-demo.local.com (be patient).....done
 
 
 Server Software:
@@ -435,58 +424,55 @@ Server Port:            80
 Document Path:          /submit-order
 Document Length:        95 bytes
 
-Concurrency Level:      10
-Time taken for tests:   84.805 seconds
-Complete requests:      1000
-Failed requests:        881
-   (Connect: 0, Receive: 0, Length: 881, Exceptions: 0)
-Total transferred:      212441 bytes
-HTML transferred:       95441 bytes
-Requests per second:    11.79 [#/sec] (mean)
-Time per request:       848.049 [ms] (mean)
-Time per request:       84.805 [ms] (mean, across all concurrent requests)
-Transfer rate:          2.45 [Kbytes/sec] received
+Concurrency Level:      1
+Time taken for tests:   2.581 seconds
+Complete requests:      10
+Failed requests:        0
+Total transferred:      2120 bytes
+HTML transferred:       950 bytes
+Requests per second:    3.87 [#/sec] (mean)
+Time per request:       258.096 [ms] (mean)
+Time per request:       258.096 [ms] (mean, across all concurrent requests)
+Transfer rate:          0.80 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
-Connect:        0    1   0.2      0       3
-Processing:   150  844 5077.7    182   60017
-Waiting:      150  844 5077.7    182   60017
-Total:        150  844 5077.7    183   60018
-ERROR: The median and mean for the initial connection time are more than twice the standard
-       deviation apart. These results are NOT reliable.
+Connect:        0    1   0.1      1       1
+Processing:   224  257  49.2    233     356
+Waiting:      223  257  49.1    233     356
+Total:        224  258  49.2    234     356
 
 Percentage of the requests served within a certain time (ms)
-  50%    183
-  66%    190
-  75%    196
-  80%    201
-  90%    222
-  95%    482
-  98%   2164
-  99%  32078
- 100%  60018 (longest request)
+  50%    234
+  66%    236
+  75%    293
+  80%    327
+  90%    356
+  95%    356
+  98%    356
+  99%    356
+ 100%    356 (longest request)
 ```
 
-##### 期望结果
+#### 4.1 期望结果
 
-###### Order
+##### Order
 
 - Pod0 接收请求并将订单发送到主题的 0 分区
 - Pod0 接收请求并将订单发送到主题的 1 分区
 - Pod0 接收请求并将订单发送到主题的 2 分区
 
-###### Repository
+##### Repository
 
 - Pod0 消费主题的 0 分区消息
 - Pod0 消费主题的 1 分区消息
 - Pod0 消费主题的 2 分区消息
 
-###### Statistics
+##### Statistics
 
 统计服务只有1个Pod，它会消费主题的所有分区消息
 
-##### 结果验证
+#### 4.2 结果验证
 
 这个时候我们查看订单服务、仓储服务和统计服务的 Pod 日志，看下是否和我们期望的一致，这里仅列出最后几条日志
 
@@ -494,30 +480,33 @@ Percentage of the requests served within a certain time (ms)
 
 - Pod0
 
-  ```json
-  {"level":"info","time":"2021-12-07T15:36:24+08:00","message":"{\"money\":133,\"order_id\":\"1468122204792164352\",\"time\":1638862584,\"user_id\":\"1468122204460814337\"}"}
-  {"level":"info","time":"2021-12-07T15:36:24+08:00","message":"{\"money\":577,\"order_id\":\"1468122204720861184\",\"time\":1638862582,\"user_id\":\"1468122197313720320\"}"}
-  {"level":"info","time":"2021-12-07T15:36:24+08:00","message":"{\"money\":133,\"order_id\":\"1468122204905410560\",\"time\":1638862584,\"user_id\":\"1468122204586643456\"}"}
+  ```shell
+  root@master:~/kafka-demo/k8s/deploy# kubectl logs order-0 -n kafka-demo
+  ......
+  {"level":"info","time":"2021-12-07T16:00:19+08:00","message":"{\"money\":81,\"order_id\":\"1468128223995891712\",\"time\":1638864019,\"user_id\":\"1468128223429660672\"}"}
+  {"level":"info","time":"2021-12-07T16:00:20+08:00","message":"{\"money\":81,\"order_id\":\"1468128227057733632\",\"time\":1638864020,\"user_id\":\"1468128226717995008\"}"}
+  {"level":"info","time":"2021-12-07T16:00:21+08:00","message":"{\"money\":81,\"order_id\":\"1468128230589337600\",\"time\":1638864021,\"user_id\":\"1468128230228627456\"}"}
   ```
 
 - Pod1
 
   ```json
-  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122481544925184\",\"time\":1638862650,\"user_id\":\"1468122481209380864\"}"}
-  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122481557508096\",\"time\":1638862650,\"user_id\":\"1468122481180020736\"}"}
-  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122482039853056\",\"time\":1638862650,\"user_id\":\"1468122481737863168\"}"}
-  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122482341842944\",\"time\":1638862650,\"user_id\":\"1468122481976938496\"}"}
-  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122482421534720\",\"time\":1638862650,\"user_id\":\"1468122482035658752\"}"}
+  root@master:~/kafka-demo/k8s/deploy# kubectl logs order-1 -n kafka-demo
+  ......
+  {"level":"info","time":"2021-12-07T15:52:21+08:00","message":"{\"money\":81,\"order_id\":\"1468126219659644928\",\"time\":1638863541,\"user_id\":\"1468126219064053760\"}"}
+  {"level":"info","time":"2021-12-07T15:52:22+08:00","message":"{\"money\":81,\"order_id\":\"1468126223015088128\",\"time\":1638863542,\"user_id\":\"1468126222658572288\"}"}
+  {"level":"info","time":"2021-12-07T15:52:23+08:00","message":"{\"money\":81,\"order_id\":\"1468126225896574976\",\"time\":1638863543,\"user_id\":\"1468126225519087616\"}"}
   ```
 
 - Pod2
 
   ```json
-  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":878,\"order_id\":\"1468122210429308928\",\"time\":1638862585,\"user_id\":\"1468122210072793088\"}"}
-  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":878,\"order_id\":\"1468122210794213376\",\"time\":1638862586,\"user_id\":\"1468122210471251968\"}"}
-  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":878,\"order_id\":\"1468122210852933632\",\"time\":1638862586,\"user_id\":\"1468122210542555136\"}"}
-  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":336,\"order_id\":\"1468122211255586816\",\"time\":1638862586,\"user_id\":\"1468122210890682368\"}"}
-  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":336,\"order_id\":\"1468122211507245056\",\"time\":1638862586,\"user_id\":\"1468122211201060864\"}"}
+  root@master:~/kafka-demo/k8s/deploy# kubectl logs order-2 -n kafka-demo
+  ......
+  {"level":"info","time":"2021-12-07T15:52:21+08:00","message":"{\"money\":81,\"order_id\":\"1468126218401353728\",\"time\":1638863541,\"user_id\":\"1468126217814151168\"}"}
+  {"level":"info","time":"2021-12-07T15:52:22+08:00","message":"{\"money\":81,\"order_id\":\"1468126222016843776\",\"time\":1638863542,\"user_id\":\"1468126221677105152\"}"}
+  {"level":"info","time":"2021-12-07T15:52:23+08:00","message":"{\"money\":81,\"order_id\":\"1468126224915107840\",\"time\":1638863542,\"user_id\":\"1468126224558592000\"}"}
+  {"level":"info","time":"2021-12-07T15:52:23+08:00","message":"{\"money\":81,\"order_id\":\"1468126227767234560\",\"time\":1638863543,\"user_id\":\"1468126227423301632\"}"}
   ```
 
 ##### Repository
