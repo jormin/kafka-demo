@@ -26,7 +26,7 @@ Kafka Demo
 
 ### 2. 资源清单
 
-#### 2.1 硬件清单
+#### 2.1 硬件
 
 | 节点   | 角色         | IP            | 配置      | Label               |
 | ------ | ------------ | ------------- | --------- | ------------------- |
@@ -35,7 +35,7 @@ Kafka Demo
 | node2  | worker       | 192.168.1.102 | 8核8G100G | usefulness=demo     |
 | node3  | worker       | 192.168.1.103 | 8核8G100G | usefulness=business |
 
-#### 2.2 部署清单
+#### 2.2 部署方案
 
 本次部署的所有资源都在命名空间 **kafka-demo** 下，所有 Pod 都部署在 node3 节点上。
 
@@ -45,12 +45,16 @@ Kafka Demo
 4. 统计服务 - statistics：部署为  Deployment，启动 1 个 Pod
 5. Kafka：使用 [helm安装zookeeper和kafka](https://blog.lerzen.com/post/helm%E5%AE%89%E8%A3%85zookeeper%E5%92%8Ckafka/) 中部署好的 Kafka，使用的 Topic 为 **order**，有三个分区，两个备份
 
-#### 2.3 域名清单
+#### 2.3 域名
 
 | 域名                          | 类型         | IP            | Service |
 | ----------------------------- | ------------ | ------------- | ------- |
 | kafka-demo.local.com                | IngressRoute | 192.168.1.100 | gateway |
 | order.kafka-demo.svc.clauster.local | DNS          | -----         | order   |
+
+#### 2.4 镜像
+
+打包的镜像我是放在自己的 harbor 上，也可以放在 docker hub 或者 托管在 腾讯云 或者 阿里云等等，对应的需要修改 **build.sh** 和 **k8s/deploy/*.yaml** 中的镜像地址以及拉取镜像的秘钥配置。
 
 ### 3. 部署
 
@@ -79,10 +83,10 @@ I have no name!@kafka-client:/$
 连接上 kafka client pod 后，创建 Topic
 
 ```shell
-I have no name!@kafka-client:/bin$ kafka-topics.sh --bootstrap-server kafka.devops.svc.cluster.local:9092 --list
+I have no name!@kafka-client:/$ kafka-topics.sh --bootstrap-server kafka.devops.svc.cluster.local:9092 --list
 __consumer_offsets
 
-I have no name!@kafka-client:/bin$ kafka-topics.sh --bootstrap-server kafka.devops.svc.cluster.local:9092 --create --topic order --partitions 3 --replication-factor 2
+I have no name!@kafka-client:/$ kafka-topics.sh --bootstrap-server kafka.devops.svc.cluster.local:9092 --create --topic order --partitions 3 --replication-factor 2
 Created topic order.
 ```
 
@@ -121,7 +125,7 @@ spec:
         - name: harbor-jormin
       containers:
         - name: gateway
-          image: harbor.wcxst.com/jormin/kafka-demo-gateway:latest
+          image: harbor.wcxst.com/kafka-demo/gateway:latest
           # 就绪探针
           readinessProbe:
             # 执行周期，单位：秒
@@ -192,7 +196,7 @@ spec:
         - name: harbor-jormin
       containers:
         - name: order
-          image: harbor.wcxst.com/jormin/kafka-demo-order:latest
+          image: harbor.wcxst.com/kafka-demo/order:latest
           # 就绪探针
           readinessProbe:
             # 执行周期，单位：秒
@@ -246,7 +250,7 @@ spec:
         - name: harbor-jormin
       containers:
         - name: repository
-          image: harbor.wcxst.com/jormin/kafka-demo-repository:latest
+          image: harbor.wcxst.com/kafka-demo/repository:latest
           # 就绪探针
           readinessProbe:
             # 执行周期，单位：秒
@@ -291,7 +295,7 @@ spec:
         - name: harbor-jormin
       containers:
         - name: statistics
-          image: harbor.wcxst.com/jormin/kafka-demo-statistics:latest
+          image: harbor.wcxst.com/kafka-demo/statistics:latest
           # 就绪探针
           readinessProbe:
             # 执行周期，单位：秒
