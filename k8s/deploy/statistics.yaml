@@ -23,7 +23,7 @@ spec:
         app: statistics
     spec:
       imagePullSecrets:
-        - harbor-jormin
+        - name: harbor-jormin
       containers:
         - name: statistics
           image: harbor.wcxst.com/jormin/kafka-demo-statistics:latest

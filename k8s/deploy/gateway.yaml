@@ -25,7 +25,7 @@ spec:
         app: gateway
     spec:
       imagePullSecrets:
-        - harbor-jormin
+        - name: harbor-jormin
       containers:
         - name: gateway
           image: harbor.wcxst.com/jormin/kafka-demo-gateway:latest
