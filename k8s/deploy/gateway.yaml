@@ -54,8 +54,7 @@ spec:
       port: 80
       targetPort: 80
   selector:
-    matchLabels:
-      app: gateway
+    app: gateway
 
 ---
 
