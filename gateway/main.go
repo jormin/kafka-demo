@@ -21,7 +21,7 @@ func main() {
 		},
 	)
 	http.HandleFunc("/submit-order", SubmitOrder)
-	_ = http.ListenAndServe(":18080", nil)
+	_ = http.ListenAndServe(":80", nil)
 }
 
 // SubmitOrder 提交订单
