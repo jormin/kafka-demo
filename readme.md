@@ -307,6 +307,105 @@ spec:
                 - ls
 ```
 
+#### 3.7  部署结果
+
+部署完成后，我们检查下 kafka-demo 下的资源列表
+
+##### Deployment
+
+```shell
+root@master:~/kafka-demo/k8s/deploy# kubectl get deploy -n kafka-demo -o wide
+NAME         READY   UP-TO-DATE   AVAILABLE   AGE     CONTAINERS   IMAGES                                          SELECTOR
+gateway      10/10   10           10          2m37s   gateway      harbor.wcxst.com/kafka-demo/gateway:latest      app=gateway
+statistics   1/1     1            1           2m37s   statistics   harbor.wcxst.com/kafka-demo/statistics:latest   app=statistics
+```
+
+##### StatefulSet
+
+```shell
+root@master:~/kafka-demo/k8s/deploy# kubectl get statefulset -n kafka-demo -o wide
+NAME         READY   AGE     CONTAINERS   IMAGES
+order        3/3     3m19s   order        harbor.wcxst.com/kafka-demo/order:latest
+repository   3/3     3m19s   repository   harbor.wcxst.com/kafka-demo/repository:latest
+```
+
+##### Pod
+
+```shell
+root@master:~/kafka-demo/k8s/deploy# kubectl get pod -n kafka-demo
+NAME                          READY   STATUS    RESTARTS   AGE
+gateway-575f596c47-5jt6r      1/1     Running   0          3m53s
+gateway-575f596c47-c6sf9      1/1     Running   0          3m53s
+gateway-575f596c47-cglx9      1/1     Running   0          3m53s
+gateway-575f596c47-dzjnb      1/1     Running   0          3m53s
+gateway-575f596c47-fbrvg      1/1     Running   0          3m53s
+gateway-575f596c47-hfk5n      1/1     Running   0          3m53s
+gateway-575f596c47-rksk7      1/1     Running   0          3m53s
+gateway-575f596c47-wdsxg      1/1     Running   0          3m53s
+gateway-575f596c47-wvkw2      1/1     Running   0          3m53s
+gateway-575f596c47-zvtkb      1/1     Running   0          3m53s
+order-0                       1/1     Running   0          3m53s
+order-1                       1/1     Running   0          3m30s
+order-2                       1/1     Running   0          3m24s
+repository-0                  1/1     Running   0          3m53s
+repository-1                  1/1     Running   0          3m33s
+repository-2                  1/1     Running   0          3m27s
+statistics-5fb5557d68-8bzrc   1/1     Running   0          3m53s
+```
+
+##### Service
+
+```shell
+root@master:~/kafka-demo/k8s/deploy# kubectl get svc -n kafka-demo -o wide
+NAME      TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE     SELECTOR
+gateway   ClusterIP   10.233.36.207   <none>        80/TCP    4m49s   app=gateway
+order     ClusterIP   10.233.17.102   <none>        80/TCP    4m49s   app=order
+
+root@master:~/kafka-demo/k8s/deploy# kubectl describe svc gateway -n kafka-demo
+Name:              gateway
+Namespace:         kafka-demo
+Labels:            <none>
+Annotations:       <none>
+Selector:          app=gateway
+Type:              ClusterIP
+IP Family Policy:  SingleStack
+IP Families:       IPv4
+IP:                10.233.36.207
+IPs:               10.233.36.207
+Port:              <unset>  80/TCP
+TargetPort:        80/TCP
+Endpoints:         10.233.92.125:80,10.233.92.126:80,10.233.92.127:80 + 7 more...
+Session Affinity:  None
+Events:            <none>
+
+root@master:~/kafka-demo/k8s/deploy# kubectl describe svc order -n kafka-demo
+Name:              order
+Namespace:         kafka-demo
+Labels:            <none>
+Annotations:       <none>
+Selector:          app=order
+Type:              ClusterIP
+IP Family Policy:  SingleStack
+IP Families:       IPv4
+IP:                10.233.17.102
+IPs:               10.233.17.102
+Port:              <unset>  80/TCP
+TargetPort:        80/TCP
+Endpoints:         10.233.92.137:80,10.233.92.139:80,10.233.92.141:80
+Session Affinity:  None
+Events:            <none>
+```
+
+##### IngressRoute
+
+```shell
+root@master:~/kafka-demo/k8s/deploy# kubectl get ingressroute -n kafka-demo -o wide
+NAME      AGE
+gateway   5m15s
+```
+
+
+
 ### 4. 测试
 
 部署完成后使用 apache ab 进行测试，如果没有安装的话，使用 **apt install apache2-utils** 安装。
