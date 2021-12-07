@@ -21,17 +21,19 @@ func main() {
 		},
 	)
 	http.HandleFunc("/submit-order", SubmitOrder)
-	_ = http.ListenAndServe(":80", nil)
+	_ = http.ListenAndServe(":18080", nil)
 }
 
 // SubmitOrder 提交订单
 func SubmitOrder(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	partition := r.Form.Get("partition")
+	url := fmt.Sprintf("http://order-%s.order.kafka-demo.svc.cluster.local/submit-order", partition)
 	m := map[string]interface{}{
 		"time":    time.Now().Unix(),
 		"user_id": id.NewID(),
 		"money":   rand.Intn(1000),
 	}
-	url := fmt.Sprintf("http://order-%d.order.kafka-demo.svc.cluster.local/submit-order", rand.Intn(3))
 	body, _ := json.Marshal(m)
 	resp, err := http.Post(url, "application/json", bytes.NewReader(body))
 	if err != nil {

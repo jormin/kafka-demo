@@ -8,19 +8,27 @@ Kafka Demo
 
 ### 1. 概述
 
-这个项目是 Go 实现的 Kafka Demo，主要功能是模拟商城的下单流程，其中下单后订单服务会向 Kafka 生成一条信息， 仓储服务会从 Kafka 消费消息进行打包发货等处理，统计服务会从 Kafka 消费消息进行订单的统计。
+这个项目是 Go 实现的 Kafka Demo，主要功能是模拟商城的下单流程，其中下单后订单服务会向 Kafka 生成一条信息， 仓储服务会从 Kafka 消费消息进行打包发货等处理，统计服务会从 Kafka 消费消息进行订单的统计。这个 Demo 的重点在于 Kafka 消息的生产和消费，因此各个服务端的代码都省略，仅打印相关的日志信息用于校验数据。
 
-这个 Demo 的重点在于 Kafka 消息的生产和消费，因此各个服务端的代码都省略，仅打印相关的日志信息用于校验数据。
+#### 1.1 模拟商城
 
-整个项目的大体流程为：
+这里我们模拟的是一个简单的商城流程，假设商城服务区域为陕西，有三个区域，分别是 陕北、关中、陕南，分别对应的分区编号是 0，1，2，我们期望的是下单时候对应分区的订单会提交到对应分区的订单服务，并由对应分区的仓储服务进行打包发货，最后由统计服务统计所有分区的订单信息，如下：
 
-1. 用户端调用 Api 网关的下单接口。
-2. 网关层生成随机用户ID及订单金额，提交给订单服务的下单接口，订单服务返回生成的订单信息，网关层记录日志并给用户发送响应信息。
+| 分区 | 编号 | 订单服务 | 仓储服务     | 统计服务       |
+| ---- | ---- | -------- | ------------ | -------------- |
+| 陕北 | 0    | Pod-0    | repository-0 | statistics-xxx |
+| 关中 | 1    | Pod-1    | repository-1 | statistics-xxx |
+| 陕南 | 2    | Pod-2    | repository-0 | statistics-xxx |
+
+#### 1.2 项目流程
+
+1. 用户端调用 Api 网关层的下单接口。
+2. 网关层生成随机用户ID及订单金额，**并随机生成一个范围为0-2的分区编号**，之后将订单提交给**对应编号的订单服务**，订单服务返回生成的订单信息，网关层记录日志并给用户发送响应信息。
 3. 订单服务接收到网关层请求后生成订单信息并将订单信息写入 Kafka，写入的主题分区从 hostname 中获取，之后记录日志。
 4. 仓储服务从 Kafka 消费消息，消费的主题分区从 hostname 获取，之后记录日志。
 5. 统计服务从 Kafka 消费改主题下的所有分区的消息，之后记录日志。
 
-详细的流程图如下：
+流程图如下：
 
 ![1](https://blog.cdn.lerzen.com/img/20211206155214.png)
 
@@ -425,33 +433,33 @@ Document Path:          /submit-order
 Document Length:        95 bytes
 
 Concurrency Level:      1
-Time taken for tests:   2.581 seconds
+Time taken for tests:   2.499 seconds
 Complete requests:      10
 Failed requests:        0
 Total transferred:      2120 bytes
 HTML transferred:       950 bytes
-Requests per second:    3.87 [#/sec] (mean)
-Time per request:       258.096 [ms] (mean)
-Time per request:       258.096 [ms] (mean, across all concurrent requests)
-Transfer rate:          0.80 [Kbytes/sec] received
+Requests per second:    4.00 [#/sec] (mean)
+Time per request:       249.888 [ms] (mean)
+Time per request:       249.888 [ms] (mean, across all concurrent requests)
+Transfer rate:          0.83 [Kbytes/sec] received
 
 Connection Times (ms)
               min  mean[+/-sd] median   max
 Connect:        0    1   0.1      1       1
-Processing:   224  257  49.2    233     356
-Waiting:      223  257  49.1    233     356
-Total:        224  258  49.2    234     356
+Processing:   217  249  42.0    238     353
+Waiting:      216  249  41.9    238     353
+Total:        217  250  42.1    238     354
 
 Percentage of the requests served within a certain time (ms)
-  50%    234
-  66%    236
-  75%    293
-  80%    327
-  90%    356
-  95%    356
-  98%    356
-  99%    356
- 100%    356 (longest request)
+  50%    238
+  66%    240
+  75%    242
+  80%    293
+  90%    354
+  95%    354
+  98%    354
+  99%    354
+ 100%    354 (longest request)
 ```
 
 #### 4.1 期望结果
@@ -483,9 +491,7 @@ Percentage of the requests served within a certain time (ms)
   ```shell
   root@master:~/kafka-demo/k8s/deploy# kubectl logs order-0 -n kafka-demo
   ......
-  {"level":"info","time":"2021-12-07T16:00:19+08:00","message":"{\"money\":81,\"order_id\":\"1468128223995891712\",\"time\":1638864019,\"user_id\":\"1468128223429660672\"}"}
-  {"level":"info","time":"2021-12-07T16:00:20+08:00","message":"{\"money\":81,\"order_id\":\"1468128227057733632\",\"time\":1638864020,\"user_id\":\"1468128226717995008\"}"}
-  {"level":"info","time":"2021-12-07T16:00:21+08:00","message":"{\"money\":81,\"order_id\":\"1468128230589337600\",\"time\":1638864021,\"user_id\":\"1468128230228627456\"}"}
+  
   ```
 
 - Pod1
@@ -493,9 +499,7 @@ Percentage of the requests served within a certain time (ms)
   ```json
   root@master:~/kafka-demo/k8s/deploy# kubectl logs order-1 -n kafka-demo
   ......
-  {"level":"info","time":"2021-12-07T15:52:21+08:00","message":"{\"money\":81,\"order_id\":\"1468126219659644928\",\"time\":1638863541,\"user_id\":\"1468126219064053760\"}"}
-  {"level":"info","time":"2021-12-07T15:52:22+08:00","message":"{\"money\":81,\"order_id\":\"1468126223015088128\",\"time\":1638863542,\"user_id\":\"1468126222658572288\"}"}
-  {"level":"info","time":"2021-12-07T15:52:23+08:00","message":"{\"money\":81,\"order_id\":\"1468126225896574976\",\"time\":1638863543,\"user_id\":\"1468126225519087616\"}"}
+  
   ```
 
 - Pod2
@@ -503,10 +507,7 @@ Percentage of the requests served within a certain time (ms)
   ```json
   root@master:~/kafka-demo/k8s/deploy# kubectl logs order-2 -n kafka-demo
   ......
-  {"level":"info","time":"2021-12-07T15:52:21+08:00","message":"{\"money\":81,\"order_id\":\"1468126218401353728\",\"time\":1638863541,\"user_id\":\"1468126217814151168\"}"}
-  {"level":"info","time":"2021-12-07T15:52:22+08:00","message":"{\"money\":81,\"order_id\":\"1468126222016843776\",\"time\":1638863542,\"user_id\":\"1468126221677105152\"}"}
-  {"level":"info","time":"2021-12-07T15:52:23+08:00","message":"{\"money\":81,\"order_id\":\"1468126224915107840\",\"time\":1638863542,\"user_id\":\"1468126224558592000\"}"}
-  {"level":"info","time":"2021-12-07T15:52:23+08:00","message":"{\"money\":81,\"order_id\":\"1468126227767234560\",\"time\":1638863543,\"user_id\":\"1468126227423301632\"}"}
+  
   ```
 
 ##### Repository
@@ -514,9 +515,7 @@ Percentage of the requests served within a certain time (ms)
  - Pod0
 
    ```json
-   {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"key\":null,\"offset\":964,\"partition\":1,\"value\":\"{\\\"money\\\":843,\\\"order_id\\\":\\\"1468122479863009280\\\",\\\"time\\\":1638862650,\\\"user_id\\\":\\\"1468122479552630784\\\"}\"}"}
-   {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"key\":null,\"offset\":965,\"partition\":1,\"value\":\"{\\\"money\\\":503,\\\"order_id\\\":\\\"1468122479913340928\\\",\\\"time\\\":1638862618,\\\"user_id\\\":\\\"\\\"}\"}"}
-   {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"key\":null,\"offset\":966,\"partition\":1,\"value\":\"{\\\"money\\\":552,\\\"order_id\\\":\\\"1468122479934312448\\\",\\\"time\\\":1638862646,\\\"user_id\\\":\\\"1468122477761662976\\\"}\"}"}
+   
    ```
    
  - Pod1
