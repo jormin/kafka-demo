@@ -50,7 +50,7 @@ Kafka Demo
 | 域名                          | 类型         | IP            | Service |
 | ----------------------------- | ------------ | ------------- | ------- |
 | kafka-demo.local.com                | IngressRoute | 192.168.1.100 | gateway |
-| order.kafka-demo.svc.clauster.local | DNS          | -----         | order   |
+| order.kafka-demo.svc.cluster.local | DNS          | -----         | order   |
 
 #### 2.4 镜像
 
@@ -403,8 +403,6 @@ root@master:~/kafka-demo/k8s/deploy# kubectl get ingressroute -n kafka-demo -o w
 NAME      AGE
 gateway   5m15s
 ```
-
-
 
 ### 4. 测试
 
