@@ -485,7 +485,7 @@ root@nfs:~# bash test.sh
 
 - Pod1
 
-  ```json
+  ```shell
   root@master:~/kafka-demo/k8s/deploy# kubectl logs order-1 -n kafka-demo
   ......
   {"level":"info","time":"2021-12-07T16:32:56+08:00","message":"{\"money\":81,\"order_id\":\"1468136430059393024\",\"time\":1638865975,\"user_id\":\"1468136429430247424\"}"}
@@ -495,7 +495,7 @@ root@nfs:~# bash test.sh
 
 - Pod2
 
-  ```json
+  ```shell
   root@master:~/kafka-demo/k8s/deploy# kubectl logs order-2 -n kafka-demo
   ......
   {"level":"info","time":"2021-12-07T16:32:57+08:00","message":"{\"money\":81,\"order_id\":\"1468136433578414080\",\"time\":1638865976,\"user_id\":\"1468136432978628608\"}"}
@@ -507,7 +507,7 @@ root@nfs:~# bash test.sh
 
  - Pod0
 
-   ```json
+   ```shell
    root@master:~/kafka-demo/k8s/deploy# kubectl logs repository-0 -n kafka-demo
    {"level":"info","time":"2021-12-07T16:32:55+08:00","message":"{\"key\":null,\"offset\":0,\"partition\":0,\"value\":\"{\\\"money\\\":81,\\\"order_id\\\":\\\"1468136426238382080\\\",\\\"time\\\":1638865975,\\\"user_id\\\":\\\"1468136425655373824\\\"}\"}"}
    {"level":"info","time":"2021-12-07T16:32:55+08:00","message":"{\"key\":null,\"offset\":1,\"partition\":0,\"value\":\"{\\\"money\\\":81,\\\"order_id\\\":\\\"1468136427404398592\\\",\\\"time\\\":1638865975,\\\"user_id\\\":\\\"1468136427060465664\\\"}\"}"}
@@ -516,12 +516,12 @@ root@nfs:~# bash test.sh
    
  - Pod1
 
-  ```shell
-  root@master:~/kafka-demo/k8s/deploy# kubectl logs repository-1 -n kafka-demo
-  {"level":"info","time":"2021-12-07T16:32:56+08:00","message":"{\"key\":null,\"offset\":0,\"partition\":1,\"value\":\"{\\\"money\\\":81,\\\"order_id\\\":\\\"1468136430059393024\\\",\\\"time\\\":1638865975,\\\"user_id\\\":\\\"1468136429430247424\\\"}\"}"}
-  {"level":"info","time":"2021-12-07T16:32:56+08:00","message":"{\"key\":null,\"offset\":1,\"partition\":1,\"value\":\"{\\\"money\\\":81,\\\"order_id\\\":\\\"1468136431246381056\\\",\\\"time\\\":1638865976,\\\"user_id\\\":\\\"1468136430894059520\\\"}\"}"}
-  {"level":"info","time":"2021-12-07T16:32:56+08:00","message":"{\"key\":null,\"offset\":2,\"partition\":1,\"value\":\"{\\\"money\\\":81,\\\"order_id\\\":\\\"1468136432269791232\\\",\\\"time\\\":1638865976,\\\"user_id\\\":\\\"1468136431942635520\\\"}\"}"}
-  ```
+   ```shell
+   root@master:~/kafka-demo/k8s/deploy# kubectl logs repository-1 -n kafka-demo
+   {"level":"info","time":"2021-12-07T16:32:56+08:00","message":"{\"key\":null,\"offset\":0,\"partition\":1,\"value\":\"{\\\"money\\\":81,\\\"order_id\\\":\\\"1468136430059393024\\\",\\\"time\\\":1638865975,\\\"user_id\\\":\\\"1468136429430247424\\\"}\"}"}
+   {"level":"info","time":"2021-12-07T16:32:56+08:00","message":"{\"key\":null,\"offset\":1,\"partition\":1,\"value\":\"{\\\"money\\\":81,\\\"order_id\\\":\\\"1468136431246381056\\\",\\\"time\\\":1638865976,\\\"user_id\\\":\\\"1468136430894059520\\\"}\"}"}
+   {"level":"info","time":"2021-12-07T16:32:56+08:00","message":"{\"key\":null,\"offset\":2,\"partition\":1,\"value\":\"{\\\"money\\\":81,\\\"order_id\\\":\\\"1468136432269791232\\\",\\\"time\\\":1638865976,\\\"user_id\\\":\\\"1468136431942635520\\\"}\"}"}
+   ```
 
 - Pod2
 
