@@ -408,6 +408,132 @@ gateway   5m15s
 
 部署完成后使用 apache ab 进行测试，如果没有安装的话，使用 **apt install apache2-utils** 安装。
 
+```shell
+root@nfs:~# ab -n 1000 -c 10 http://kafka-demo.local.com/submit-order
+This is ApacheBench, Version 2.3 <$Revision: 1843412 $>
+Copyright 1996 Adam Twiss, Zeus Technology Ltd, http://www.zeustech.net/
+Licensed to The Apache Software Foundation, http://www.apache.org/
+
+Benchmarking kafka-demo.local.com (be patient)
+Completed 100 requests
+Completed 200 requests
+Completed 300 requests
+Completed 400 requests
+Completed 500 requests
+Completed 600 requests
+Completed 700 requests
+Completed 800 requests
+Completed 900 requests
+Completed 1000 requests
+Finished 1000 requests
+
+
+Server Software:
+Server Hostname:        kafka-demo.local.com
+Server Port:            80
+
+Document Path:          /submit-order
+Document Length:        95 bytes
+
+Concurrency Level:      10
+Time taken for tests:   84.805 seconds
+Complete requests:      1000
+Failed requests:        881
+   (Connect: 0, Receive: 0, Length: 881, Exceptions: 0)
+Total transferred:      212441 bytes
+HTML transferred:       95441 bytes
+Requests per second:    11.79 [#/sec] (mean)
+Time per request:       848.049 [ms] (mean)
+Time per request:       84.805 [ms] (mean, across all concurrent requests)
+Transfer rate:          2.45 [Kbytes/sec] received
+
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0    1   0.2      0       3
+Processing:   150  844 5077.7    182   60017
+Waiting:      150  844 5077.7    182   60017
+Total:        150  844 5077.7    183   60018
+ERROR: The median and mean for the initial connection time are more than twice the standard
+       deviation apart. These results are NOT reliable.
+
+Percentage of the requests served within a certain time (ms)
+  50%    183
+  66%    190
+  75%    196
+  80%    201
+  90%    222
+  95%    482
+  98%   2164
+  99%  32078
+ 100%  60018 (longest request)
+```
+
+##### 期望结果
+
+###### Order
+
+- Pod0 接收请求并将订单发送到主题的 0 分区
+- Pod0 接收请求并将订单发送到主题的 1 分区
+- Pod0 接收请求并将订单发送到主题的 2 分区
+
+###### Repository
+
+- Pod0 消费主题的 0 分区消息
+- Pod0 消费主题的 1 分区消息
+- Pod0 消费主题的 2 分区消息
+
+###### Statistics
+
+统计服务只有1个Pod，它会消费主题的所有分区消息
+
+##### 结果验证
+
+这个时候我们查看订单服务、仓储服务和统计服务的 Pod 日志，看下是否和我们期望的一致，这里仅列出最后几条日志
+
+##### Order
+
+- Pod0
+
+  ```json
+  {"level":"info","time":"2021-12-07T15:36:24+08:00","message":"{\"money\":133,\"order_id\":\"1468122204792164352\",\"time\":1638862584,\"user_id\":\"1468122204460814337\"}"}
+  {"level":"info","time":"2021-12-07T15:36:24+08:00","message":"{\"money\":577,\"order_id\":\"1468122204720861184\",\"time\":1638862582,\"user_id\":\"1468122197313720320\"}"}
+  {"level":"info","time":"2021-12-07T15:36:24+08:00","message":"{\"money\":133,\"order_id\":\"1468122204905410560\",\"time\":1638862584,\"user_id\":\"1468122204586643456\"}"}
+  ```
+
+- Pod1
+
+  ```json
+  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122481544925184\",\"time\":1638862650,\"user_id\":\"1468122481209380864\"}"}
+  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122481557508096\",\"time\":1638862650,\"user_id\":\"1468122481180020736\"}"}
+  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122482039853056\",\"time\":1638862650,\"user_id\":\"1468122481737863168\"}"}
+  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122482341842944\",\"time\":1638862650,\"user_id\":\"1468122481976938496\"}"}
+  {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"money\":598,\"order_id\":\"1468122482421534720\",\"time\":1638862650,\"user_id\":\"1468122482035658752\"}"}
+  ```
+
+- Pod2
+
+  ```json
+  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":878,\"order_id\":\"1468122210429308928\",\"time\":1638862585,\"user_id\":\"1468122210072793088\"}"}
+  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":878,\"order_id\":\"1468122210794213376\",\"time\":1638862586,\"user_id\":\"1468122210471251968\"}"}
+  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":878,\"order_id\":\"1468122210852933632\",\"time\":1638862586,\"user_id\":\"1468122210542555136\"}"}
+  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":336,\"order_id\":\"1468122211255586816\",\"time\":1638862586,\"user_id\":\"1468122210890682368\"}"}
+  {"level":"info","time":"2021-12-07T15:36:26+08:00","message":"{\"money\":336,\"order_id\":\"1468122211507245056\",\"time\":1638862586,\"user_id\":\"1468122211201060864\"}"}
+  ```
+
+##### Repository
+
+ - Pod0
+
+   ```json
+   {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"key\":null,\"offset\":964,\"partition\":1,\"value\":\"{\\\"money\\\":843,\\\"order_id\\\":\\\"1468122479863009280\\\",\\\"time\\\":1638862650,\\\"user_id\\\":\\\"1468122479552630784\\\"}\"}"}
+   {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"key\":null,\"offset\":965,\"partition\":1,\"value\":\"{\\\"money\\\":503,\\\"order_id\\\":\\\"1468122479913340928\\\",\\\"time\\\":1638862618,\\\"user_id\\\":\\\"\\\"}\"}"}
+   {"level":"info","time":"2021-12-07T15:37:30+08:00","message":"{\"key\":null,\"offset\":966,\"partition\":1,\"value\":\"{\\\"money\\\":552,\\\"order_id\\\":\\\"1468122479934312448\\\",\\\"time\\\":1638862646,\\\"user_id\\\":\\\"1468122477761662976\\\"}\"}"}
+   ```
+   
+ - Pod1
+
+- Pod2
+
 ### 5. 总结
 
 License

@@ -47,7 +47,6 @@ func GetLogger() zerolog.Logger {
 // GetPodNo 获取Pod编号
 func GetPodNo() int {
 	host, _ := os.Hostname()
-	host = "order-1"
 	pattern := regexp.MustCompile(`.*(\d+)`)
 	res := pattern.FindAllStringSubmatch(host, -1)
 	no, _ := strconv.Atoi(res[0][1])
