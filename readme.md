@@ -13,9 +13,9 @@ Kafka Demo
 
 | 分区 | 编号 | 订单服务 | 仓储服务     | 统计服务       |
 | ---- | ---- | -------- | ------------ | -------------- |
-| 陕北 | 0    | Pod-0    | repository-0 | statistics-xxx |
-| 关中 | 1    | Pod-1    | repository-1 | statistics-xxx |
-| 陕南 | 2    | Pod-2    | repository-2 | statistics-xxx |
+| 陕北 | 0    | order-0    | repository-0 | statistics-xxx |
+| 关中 | 1    | order-1    | repository-1 | statistics-xxx |
+| 陕南 | 2    | order-2    | repository-2 | statistics-xxx |
 
 #### 1.2 项目流程
 
